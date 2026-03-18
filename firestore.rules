@@ -1,0 +1,116 @@
+// ============================================================
+// WHITE INK PORTAL — Firestore Security Rules
+// ============================================================
+// Copy-paste this in Firebase Console → Firestore → Rules
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin email — change this to your actual admin email
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "admin@whiteinkdesignstudio.com";
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── ALLOWED USERS (Admin read/write, used to check access) ──
+    match /allowedUsers/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── USERS ──
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(uid) || isAdmin();
+    }
+
+    // ── LOGIN HISTORY ──
+    match /loginHistory/{docId} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin();
+    }
+
+    // ── ATTENDANCE ──
+    match /attendance/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    // ── TASKS ──
+    match /tasks/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ── CHANGES ──
+    match /changes/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    // ── BREAKS ──
+    match /breaks/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+
+    // ── LEAVES ──
+    match /leaves/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || isOwner(resource.data.uid);
+    }
+
+    // ── MEETINGS ──
+    match /meetings/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    // ── ACTIVITIES ──
+    match /activities/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    // ── CONTENT POSTS ──
+    match /contentPosts/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    // ── APPROVALS ──
+    match /approvals/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    // ── REVIEWS (Admin writes, employee reads own) ──
+    match /reviews/{docId} {
+      allow create, update: if isAdmin();
+      allow read: if isSignedIn();
+    }
+
+    // ── ADMIN SETTINGS ──
+    match /adminSettings/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── SOPs ──
+    match /sops/{docId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
